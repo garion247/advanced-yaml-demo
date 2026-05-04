@@ -4,19 +4,16 @@ on:
   push:
     branches: [ master ]
 
-x-anchors:
-  setup-node: &setup-node
-    name: Setup Node 20
-    uses: actions/setup-node@v4
-    with:
-      node-version: '20'
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - *setup-node
+      - &setup-node
+        name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - run: npm test
 
   build:
