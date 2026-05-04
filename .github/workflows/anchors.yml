@@ -4,14 +4,15 @@ on:
   push:
     branches: [ master ]
 
+env:
+  LOG_LEVEL: info
+  CACHE_TTL: '3600'
+  REGION: us-east-1
+
 jobs:
   dev:
     runs-on: ubuntu-latest
     env:
-      <<: &base-env
-        LOG_LEVEL: info
-        CACHE_TTL: '3600'
-        REGION: us-east-1
       LOG_LEVEL: debug
       DEBUG_MODE: 'true'
     steps:
@@ -24,7 +25,6 @@ jobs:
   prod:
     runs-on: ubuntu-latest
     env:
-      <<: *base-env
       LOG_LEVEL: warn
       AUDIT_ENABLED: 'true'
     steps:
