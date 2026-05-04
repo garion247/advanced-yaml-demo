@@ -2,38 +2,21 @@ name: Anchors Demo
 
 on:
   push:
-    branches: [ master, 'release/**' ]
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Override environment'
-        required: false
-        type: choice
-        default: ''
-        options: [ '', development, staging, production ]
-
-env:
-  TARGET_ENV: >-
-    ${{
-      (github.event_name == 'workflow_dispatch' && inputs.environment != '' && inputs.environment) ||
-      (github.ref == 'refs/heads/master' && 'production') ||
-      (startsWith(github.ref, 'refs/heads/release/') && 'staging') ||
-      'development'
-    }}
-  CONFIG: |
-    {
-      "development": { "replicas": 1, "tier": "Basic",    "monitor": false },
-      "staging":     { "replicas": 2, "tier": "Standard", "monitor": true  },
-      "production":  { "replicas": 5, "tier": "Premium",  "monitor": true  }
-    }
+    branches: [ master ]
 
 jobs:
-  configure:
+  use-vars-and-secrets:
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
     steps:
-      - name: Resolve config for ${{ env.TARGET_ENV }}
+      - name: Read repo variables (visible in logs)
         run: |
-          echo "Target env: ${{ env.TARGET_ENV }}"
-          echo "Replicas:   ${{ fromJSON(env.CONFIG)[env.TARGET_ENV].replicas }}"
-          echo "Tier:       ${{ fromJSON(env.CONFIG)[env.TARGET_ENV].tier }}"
-          echo "Monitor:    ${{ fromJSON(env.CONFIG)[env.TARGET_ENV].monitor }}"
+          echo "Region: ${{ vars.DEPLOY_REGION }}"
+          echo "Tier:   ${{ vars.DEPLOY_TIER }}"
+
+      - name: Use the secret (token value will be masked)
+        run: |
+          echo "Token length: ${#DEPLOY_TOKEN}"
+          echo "Echoing the token directly: $DEPLOY_TOKEN"
+          echo "Note: GitHub auto-masks any line that contains the secret value."
