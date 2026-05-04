@@ -1,0 +1,44 @@
+name: Anchors Demo
+
+on:
+  push:
+    branches: [ master, 'release/**' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Override environment'
+        required: false
+        type: choice
+        default: ''
+        options: [ '', development, staging, production ]
+
+env:
+  TARGET_ENV: >-
+    ${{
+      (github.event_name == 'workflow_dispatch' && inputs.environment != '' && inputs.environment) ||
+      (github.ref == 'refs/heads/master' && 'production') ||
+      (startsWith(github.ref, 'refs/heads/release/') && 'staging') ||
+      'development'
+    }}
+
+concurrency:
+  group: >-
+    deploy-${{
+      (github.event_name == 'workflow_dispatch' && inputs.environment != '' && inputs.environment) ||
+      (github.ref == 'refs/heads/master' && 'production') ||
+      (startsWith(github.ref, 'refs/heads/release/') && 'staging') ||
+      'development'
+    }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+    steps:
+      - name: Pretend deploy
+        run: |
+          echo "Deploying to ${{ env.TARGET_ENV }} in ${{ vars.DEPLOY_REGION }}..."
+          sleep 20
+          echo "Done."
