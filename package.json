@@ -1,0 +1,8 @@
+{
+  "name": "advanced-yaml-demo",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo 'Tests pass'",
+    "build": "mkdir -p dist && echo 'built' > dist/build.txt"
+  }
+}
