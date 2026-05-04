@@ -5,20 +5,31 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
+  dev:
     runs-on: ubuntu-latest
+    env:
+      <<: &base-env
+        LOG_LEVEL: info
+        CACHE_TTL: '3600'
+        REGION: us-east-1
+      LOG_LEVEL: debug
+      DEBUG_MODE: 'true'
     steps:
-      - uses: actions/checkout@v4
-      - &setup-node
-        name: Setup Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm test
+      - run: |
+          echo "LOG_LEVEL:  $LOG_LEVEL"
+          echo "CACHE_TTL:  $CACHE_TTL"
+          echo "REGION:     $REGION"
+          echo "DEBUG_MODE: $DEBUG_MODE"
 
-  build:
+  prod:
     runs-on: ubuntu-latest
+    env:
+      <<: *base-env
+      LOG_LEVEL: warn
+      AUDIT_ENABLED: 'true'
     steps:
-      - uses: actions/checkout@v4
-      - *setup-node
-      - run: npm run build
+      - run: |
+          echo "LOG_LEVEL:     $LOG_LEVEL"
+          echo "CACHE_TTL:     $CACHE_TTL"
+          echo "REGION:        $REGION"
+          echo "AUDIT_ENABLED: $AUDIT_ENABLED"
