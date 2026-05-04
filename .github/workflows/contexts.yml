@@ -3,52 +3,31 @@ name: Contexts Demo
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
+    inputs:
+      config:
+        description: 'JSON config: {"env":"...","replicas":N}'
+        required: true
+        type: string
+        default: '{"env":"staging","replicas":2}'
 
 jobs:
-  dump:
+  filters:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: github context (event metadata)
+      - name: Object filter on a push event
+        if: github.event_name == 'push'
         run: |
-          echo "event_name: ${{ github.event_name }}"
-          echo "ref:        ${{ github.ref }}"
-          echo "ref_name:   ${{ github.ref_name }}"
-          echo "ref_type:   ${{ github.ref_type }}"
-          echo "sha:        ${{ github.sha }}"
-          echo "actor:      ${{ github.actor }}"
-          echo "run_id:     ${{ github.run_id }}"
-          echo "run_number: ${{ github.run_number }}"
-          echo "workflow:   ${{ github.workflow }}"
-          echo "repository: ${{ github.repository }}"
+          echo "All commit messages on this push:"
+          echo "${{ join(github.event.commits.*.message, ' || ') }}"
+          echo "All commit authors on this push:"
+          echo "${{ join(github.event.commits.*.author.name, ', ') }}"
 
-      - name: runner context (machine metadata)
+      - name: fromJSON round trip on workflow_dispatch
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          echo "name:       ${{ runner.name }}"
-          echo "os:         ${{ runner.os }}"
-          echo "arch:       ${{ runner.arch }}"
-          echo "temp:       ${{ runner.temp }}"
-
-      - name: env context (environment variables)
-        env:
-          EXAMPLE: "from step"
-        run: |
-          echo "EXAMPLE:    ${{ env.EXAMPLE }}"
-          echo "GITHUB_REF: ${{ env.GITHUB_REF }}"
-
-      - name: job and steps contexts
-        id: probe
-        run: |
-          echo "this step ran"
-          echo "value=hello" >> "$GITHUB_OUTPUT"
-
-      - name: read job and steps after probe
-        run: |
-          echo "job.status:           ${{ job.status }}"
-          echo "steps.probe.outcome:  ${{ steps.probe.outcome }}"
-          echo "steps.probe.conclusion: ${{ steps.probe.conclusion }}"
-          echo "steps.probe.outputs.value: ${{ steps.probe.outputs.value }}"
+          echo "Raw input: ${{ inputs.config }}"
+          echo "Parsed env:      ${{ fromJSON(inputs.config).env }}"
+          echo "Parsed replicas: ${{ fromJSON(inputs.config).replicas }}"
